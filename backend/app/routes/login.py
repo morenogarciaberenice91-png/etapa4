@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.config.conexion import conectar
-
 login_bp = Blueprint("login", __name__)
-
 @login_bp.route("/api/login", methods=["POST"])
 def login():
     try:
