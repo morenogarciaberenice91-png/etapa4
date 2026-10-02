@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import "../App.css";
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [exito, setExito] = useState(false);
   const navigate = useNavigate();
+  const { iniciarSesion } = useAuth();
 
   const manejarLogin = async (e) => {
     e.preventDefault();
@@ -20,22 +24,21 @@ function Login() {
 
     try {
       const resultado = await login(username, password);
-      
-      if (resultado.ok && resultado.data.success) {
+      if (resultado.ok && resultado.datos.success) {
+        iniciarSesion({ username: resultado.datos.username });
         setExito(true);
-        setMensaje(resultado.data.message);
-        // Redirigir al dashboard si las credenciales son correctas
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
+        setMensaje(resultado.datos.message);
+        navigate("/dashboard");
       } else {
         setExito(false);
-        setMensaje(resultado.data.message || "Usuario o contraseña incorrectos");
+        setMensaje(resultado.datos.message || "Usuario o contraseña incorrectos");
       }
-    } catch {
-      setExito(false);
-      setMensaje("No se pudo conectar con el servidor");
-    }
+   
+    } catch (error) {
+  console.error(error);
+  setExito(false);
+  setMensaje("No se pudo conectar con el servidor");
+}
   };
 
   return (
