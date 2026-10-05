@@ -1,0 +1,107 @@
+from flask import Blueprint, jsonify, request
+from app.config.conexion import conectar
+
+clientes_bp = Blueprint("clientes", __name__)
+
+# GET: Consultar clientes
+@clientes_bp.route("/api/clientes", methods=["GET"])
+def obtener_clientes():
+    conexion = conectar()
+    if conexion is None:
+        return jsonify({"success": False, "message": "Sin conexión a BD"}), 500
+    cursor = None
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("SELECT id, nombre FROM cliente")
+        filas = cursor.fetchall()
+        
+        # Convierte las tuplas recibidas de la BD en un listado de diccionarios JSON
+        columnas = [col[0] for col in cursor.description]
+        clientes = [dict(zip(columnas, fila)) for fila in filas]
+
+        return jsonify({"success": True, "data": clientes}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        conexion.close()
+
+# POST: Crear cliente
+@clientes_bp.route("/api/clientes", methods=["POST"])
+def crear_cliente():
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return jsonify({"success": False, "message": "JSON válido requerido"}), 400
+    
+    nombre = datos.get("nombre")
+    if not isinstance(nombre, str) or not nombre.strip():
+        return jsonify({"success": False, "message": "El nombre es obligatorio"}), 400
+
+    conexion = conectar()
+    if conexion is None:
+        return jsonify({"success": False, "message": "Sin conexión a BD"}), 500
+
+    cursor = None
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("INSERT INTO cliente (nombre) VALUES (%s)", (nombre.strip(),))
+        conexion.commit()
+        return jsonify({"success": True, "message": "Cliente creado", "id": cursor.lastrowid}), 201
+    except Exception as e:
+        conexion.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        conexion.close()
+
+# PUT: Actualizar cliente
+@clientes_bp.route("/api/clientes/<int:cliente_id>", methods=["PUT"])
+def actualizar_cliente(cliente_id):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return jsonify({"success": False, "message": "JSON válido requerido"}), 400
+
+    nombre = datos.get("nombre")
+    if not isinstance(nombre, str) or not nombre.strip():
+        return jsonify({"success": False, "message": "El nombre es obligatorio"}), 400
+
+    conexion = conectar()
+    if conexion is None:
+        return jsonify({"success": False, "message": "Sin conexión a BD"}), 500
+
+    cursor = None
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE cliente SET nombre=%s WHERE id=%s", (nombre.strip(), cliente_id))
+        conexion.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "No encontrado o sin cambios"}), 404
+        return jsonify({"success": True, "message": "Cliente actualizado"}), 200
+    except Exception as e:
+        conexion.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        conexion.close()
+
+# DELETE: Eliminar cliente
+@clientes_bp.route("/api/clientes/<int:cliente_id>", methods=["DELETE"])
+def eliminar_cliente(cliente_id):
+    conexion = conectar()
+    if conexion is None:
+        return jsonify({"success": False, "message": "Sin conexión a BD"}), 500
+
+    cursor = None
+    try:
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM cliente WHERE id=%s", (cliente_id,))
+        conexion.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Cliente no encontrado"}), 404
+        return jsonify({"success": True, "message": "Cliente eliminado"}), 200
+    except Exception as e:
+        conexion.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        conexion.close()

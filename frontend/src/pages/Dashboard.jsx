@@ -18,6 +18,7 @@ function Dashboard() {
       <p>Bienvenido, <strong>{usuario?.username}</strong></p>
       <nav>
         <Link to="/dashboard">Inicio</Link>
+        <Link to="/clientes">Clientes</Link>
       </nav>
       <button onClick={salir}>Cerrar sesión</button>
     </div>

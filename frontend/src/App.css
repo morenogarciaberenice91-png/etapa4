@@ -168,3 +168,22 @@ body {
 .dashboard button:hover {
   background-color: #e5e7eb;
 }
+
+/* Agrega esto al final de App.css */
+table {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+th {
+  background-color: #f4f4f4;
+  color: #333;
+}

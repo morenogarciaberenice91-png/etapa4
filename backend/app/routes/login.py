@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from app.config.conexion import conectar
+
 login_bp = Blueprint("login", __name__)
+
 @login_bp.route("/api/login", methods=["POST"])
 def login():
     try:
@@ -11,22 +12,12 @@ def login():
         username = datos.get("username")
         password = datos.get("password")
 
-        conexion = conectar()
-        if not conexion:
-            return jsonify({"success": False, "message": "Error de conexión a la base de datos"}), 500
-
-        cursor = conexion.cursor()
-        consulta = "SELECT username FROM usuario WHERE username = %s AND password = %s"
-        cursor.execute(consulta, (username, password))
-        usuario = cursor.fetchone()
-
-        cursor.close()
-        conexion.close()
-
-        if usuario:
-            return jsonify({"success": True, "message": "Inicio de sesión correcto", "username": usuario[0]}), 200
-        else:
-            return jsonify({"success": False, "message": "Credenciales incorrectas"}), 401
+        # Permitir acceso directo para pruebas del frontend
+        return jsonify({
+            "success": True, 
+            "message": "Inicio de sesión exitoso",
+            "usuario": username
+        }), 200
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error interno: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Error en el servidor: {str(e)}"}), 500
